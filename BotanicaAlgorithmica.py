@@ -1,6 +1,7 @@
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+from Presets import _PRESETS
 
 # Funkcija za odabir pravila
 def _roulette_selection(rules):
@@ -12,64 +13,14 @@ def _roulette_selection(rules):
             return rule
     return rules[-1]
 
-# Kompletna lista preseta
-_PRESETS = [
-    {
-        'axiom': 'F',
-        'rules': [
-            {'symbol': 'F', 'odds': 0.33, 'newSymbols': 'F[+F]F[-F][F]'},
-            {'symbol': 'F', 'odds': 0.33, 'newSymbols': 'F[+F][F]'},
-            {'symbol': 'F', 'odds': 0.34, 'newSymbols': 'F[-F][F]'},
-        ]
-    },
-    {
-        'axiom': 'G',
-        'rules': [
-            {'symbol': 'F', 'odds': 1.0, 'newSymbols': 'FF'},
-            {'symbol': 'G', 'odds': 1.0, 'newSymbols': 'F+[-F-GF-G][+FF][--GF[+G]][++F-G]'},
-        ]
-    },
-    {
-        'axiom': 'F',
-        'rules': [
-            {'symbol': 'F', 'odds': 1.0, 'newSymbols': 'FF+[+F-F-F]-[-F+F+F]'},
-        ]
-    },
-    {
-        'axiom': 'G',
-        'rules': [
-            {'symbol': 'F', 'odds': 1.0, 'newSymbols': 'FG[FG[+GF]]'},
-            {'symbol': 'G', 'odds': 1.0, 'newSymbols': 'FF[+GZ++G-F[+GZ]][-G++F-G]'},
-            {'symbol': 'Z', 'odds': 1.0, 'newSymbols': '[+F-G-F][++GZ]'},
-        ]
-    },
-    {
-        'axiom': 'F',
-        'rules': [
-            {'symbol': 'F', 'odds': 1.0, 'newSymbols': 'F[+F]F[-F]F'},
-        ]
-    },
-    {
-        'axiom': 'G',
-        'rules': [
-            {'symbol': 'G', 'odds': 0.33, 'newSymbols': 'F[+G]F[-G]+G'},
-            {'symbol': 'G', 'odds': 0.33, 'newSymbols': 'F[-G]F[-G]+G'},
-            {'symbol': 'G', 'odds': 0.34, 'newSymbols': 'F[-G]F+G'},
-            {'symbol': 'F', 'odds': 1.0, 'newSymbols': 'FF'},
-        ]
-    },
-    {
-        'axiom': 'G',
-        'rules': [
-            {'symbol': 'G', 'odds': 1.0, 'newSymbols': 'F[-[[G]+G]]+F[+FG]-G'},
-            {'symbol': 'F', 'odds': 1.0, 'newSymbols': 'FF'},
-        ]
-    }
-]
-
-
 class LSystemDemo:
-    def __init__(self, preset_index=0, iterations=5):
+    def __init__(self, preset_index=None, iterations=5):
+
+        if preset_index is None:
+            preset_index = random.randint(0, len(_PRESETS) - 1)
+        else:
+            preset_index = max(0, min(preset_index, len(_PRESETS) - 1))
+
         self._axiom = _PRESETS[preset_index]['axiom']
         self._rules = _PRESETS[preset_index]['rules']
         self.iterations = iterations
@@ -92,29 +43,34 @@ class LSystemDemo:
             cur = self._apply_rules_to_sentence(cur)
         self._sentence = cur
 
+    import random
+
     def _render(self):
         fig, ax = plt.subplots()
         ax.set_aspect('equal')
 
         stack = []
         current_pos = np.array([0, 0])
-        angle = 90  # Početni ugao postavljen na 90 stepeni
+        angle = 90 
+
+        colors = ['g'] * 5 + ['brown', 'grey', 'yellow', 'navy']
+        color = random.choice(colors)
 
         for c in self._sentence:
             if c == 'F':
                 next_pos = current_pos + np.array([np.cos(np.radians(angle)), np.sin(np.radians(angle))])
-                ax.plot([current_pos[0], next_pos[0]], [current_pos[1], next_pos[1]], 'g-')
+                ax.plot([current_pos[0], next_pos[0]], [current_pos[1], next_pos[1]], color=color, linestyle='-')
                 current_pos = next_pos
             elif c == 'G':
-                # Dodavanje manje zelene tačke za 'G'
-                ax.plot(current_pos[0], current_pos[1], 'go', markersize=3)  # Zelena tačka manje veličine
+                ax.plot(current_pos[0], current_pos[1], 'go', markersize=3) 
             elif c == 'Z':
-                # Dodavanje roze tačke za 'Z'
-                ax.plot(current_pos[0], current_pos[1], 'mo', markersize=4)  # Roza tačka
+                ax.plot(current_pos[0], current_pos[1], 'mo', markersize=4) 
             elif c == '+':
-                angle += 25  # Rotira za 25 stepeni u smeru kazaljke na satu
+                angle_change = random.uniform(12, 35)
+                angle += angle_change
             elif c == '-':
-                angle -= 25  # Rotira za 25 stepeni suprotno od smera kazaljke na satu
+                angle_change = random.uniform(12, 35)
+                angle -= angle_change
             elif c == '[':
                 stack.append((current_pos, angle))
             elif c == ']':
@@ -123,8 +79,6 @@ class LSystemDemo:
         ax.axis('off')
         plt.show()
 
-
-
-app = LSystemDemo(preset_index=3, iterations=3)
+app = LSystemDemo(iterations=3)
 app._apply_rules()
 app._render()
