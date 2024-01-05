@@ -1,9 +1,13 @@
+import sys
+sys.path.append('presets') 
+
+from Presets import _PRESETS
+
 import random
 import matplotlib.pyplot as plt
 import numpy as np
-from Presets import _PRESETS
+import pandas as pd
 
-# Funkcija za odabir pravila
 def _roulette_selection(rules):
     rand = random.random()
     sum_odds = 0
@@ -20,6 +24,8 @@ class LSystemDemo:
             preset_index = random.randint(0, len(_PRESETS) - 1)
         else:
             preset_index = max(0, min(preset_index, len(_PRESETS) - 1))
+
+        self.colors = pd.read_csv('presets\colors\colors_preset.csv')['Color'].tolist()
 
         self._axiom = _PRESETS[preset_index]['axiom']
         self._rules = _PRESETS[preset_index]['rules']
@@ -43,8 +49,6 @@ class LSystemDemo:
             cur = self._apply_rules_to_sentence(cur)
         self._sentence = cur
 
-    import random
-
     def _render(self):
         fig, ax = plt.subplots()
         ax.set_aspect('equal')
@@ -53,8 +57,7 @@ class LSystemDemo:
         current_pos = np.array([0, 0])
         angle = 90 
 
-        colors = ['g'] * 5 + ['brown', 'grey', 'yellow', 'navy']
-        color = random.choice(colors)
+        color = random.choice(self.colors)
 
         for c in self._sentence:
             if c == 'F':
