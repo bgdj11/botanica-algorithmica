@@ -3,12 +3,6 @@ _PRESETS = [
     {
         'axiom': 'F',
         'rules': [
-            {'symbol': 'F', 'odds': 1.0, 'newSymbols': 'FF-[-F+F+F]+[+F-F-F]'},
-        ]
-    },
-    {
-        'axiom': 'F',
-        'rules': [
             {'symbol': 'F', 'odds': 0.5, 'newSymbols': 'F[+F]F[-F]G'},
             {'symbol': 'F', 'odds': 0.5, 'newSymbols': 'F[+F]G'},
             {'symbol': 'G', 'odds': 0.7, 'newSymbols': 'GG'},
@@ -23,16 +17,6 @@ _PRESETS = [
             {'symbol': 'G', 'odds': 0.6, 'newSymbols': 'G[+Z][--Z]F'},
             {'symbol': 'G', 'odds': 0.4, 'newSymbols': 'G[-Z][++Z]F'},
             {'symbol': 'Z', 'odds': 1.0, 'newSymbols': '[+FZ][-FZ]G'},
-        ]
-    },
-    {
-        'axiom': 'F',
-        'rules': [
-            {'symbol': 'F', 'odds': 0.5, 'newSymbols': 'F[+G-F-G][--G+F+G]'},
-            {'symbol': 'F', 'odds': 0.5, 'newSymbols': 'F[+G+F+G][-G-F-G]'},
-            {'symbol': 'G', 'odds': 0.6, 'newSymbols': 'G[+Z][-Z]G'},
-            {'symbol': 'G', 'odds': 0.4, 'newSymbols': 'G[-Z][+Z]G'},
-            {'symbol': 'Z', 'odds': 1.0, 'newSymbols': '[+GZ][-GZ]'},
         ]
     },
     {
@@ -58,12 +42,6 @@ _PRESETS = [
         'rules': [
             {'symbol': 'F', 'odds': 1.0, 'newSymbols': 'FF'},
             {'symbol': 'G', 'odds': 1.0, 'newSymbols': 'F+[-F-GF-G][+FF][--GF[+G]][++F-G]'},
-        ]
-    },
-    {
-        'axiom': 'F',
-        'rules': [
-            {'symbol': 'F', 'odds': 1.0, 'newSymbols': 'FF+[+F-F-F]-[-F+F+F]'},
         ]
     },
     {

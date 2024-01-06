@@ -5,7 +5,7 @@ import csv
 def rgb_to_hex(rgb):
     return "#{:02x}{:02x}{:02x}".format(*rgb)
 
-def is_bright(color, threshold=600):
+def is_bright(color, threshold=550):
     # Definisemo prag za svetle boje
     return sum(color) > threshold
 
