@@ -88,7 +88,7 @@ class Botanica:
 
         # Pomeranje horizontalno ako je biljka presiroka
         horizontal_offset = 0
-        if plant_width * scale_factor > screen_width * 2 / 3 :
+        if plant_width * scale_factor > screen_width * 0.62 :
             horizontal_offset = (screen_width - plant_width * scale_factor) / 2
 
         # Pomeranje vertikalno
@@ -100,12 +100,14 @@ class Botanica:
 
     def _render(self, screen, scale_factor, offset):
         screen.fill(pygame.Color('#b2d6d0'))
-
-        # Pocetna pozicija bez offseta
+        
         current_pos = np.array([screen.get_width() / 2, screen.get_height() - 50]) + offset
 
         angle = 90
         stack = []
+
+        growth_factor = 9  # Pocetna debljina grane
+        growth_factor_stack = []  # Stek za pamcenje prethodnih vrednosti growth_factor
 
         color = pygame.Color(random.choice(self.colors))
         color_1 = pygame.Color(random.choice(self.colors))
@@ -114,30 +116,37 @@ class Botanica:
         for c in self._sentence:
             if c == 'F':
                 next_pos = current_pos + (np.array([np.cos(np.radians(angle)), -np.sin(np.radians(angle))]) * scale_factor)
-                pygame.draw.line(screen, color, current_pos.astype(int), next_pos.astype(int), 4)
+                pygame.draw.line(screen, color, current_pos.astype(int), next_pos.astype(int), int(growth_factor))
                 current_pos = next_pos
+
             elif c == 'G':
                 if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
                     pygame.draw.circle(screen, color_1, current_pos.astype(int), 5, 0)
+
             elif c == 'Z':
                 if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
                     pygame.draw.circle(screen, color_2, current_pos.astype(int), 4, 0)
+
             elif c == '+':
                 angle += random.uniform(15, 35)
-                angle %= 360
+
             elif c == '-':
                 angle -= random.uniform(15, 35)
-                angle %= 360
+
             elif c == '[':
                 stack.append((current_pos.copy(), angle))
+                growth_factor_stack.append(growth_factor)
+                growth_factor *= 0.85  # Smanji growth_factor za nove grane
+
             elif c == ']':
                 current_pos, angle = stack.pop()
+                growth_factor = growth_factor_stack.pop()  # Vrati growth_factor na prethodnu vrednost
 
         pygame.display.flip()
 
 
 pygame.init()
-screen = pygame.display.set_mode((900, 800)) 
+screen = pygame.display.set_mode((1000, 800)) 
 pygame.display.set_caption('Botanica Algorithmica')
 
 app = Botanica(iterations=4)
