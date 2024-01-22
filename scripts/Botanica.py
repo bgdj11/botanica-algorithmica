@@ -28,32 +28,13 @@ class Botanica:
         self.colors = pd.read_csv('presets\colors\colors_preset.csv')['Color'].tolist()
         self.leaf_colors = filter_leaf_colors(self.colors)
 
-        self.leaf_shape = random.choice(leaf_shapes)
-
         self._axiom = _PRESETS[preset_index]['axiom']
         self._rules = _PRESETS[preset_index]['rules']
 
-        # izbor broja iteracija u zavisnosti od preseta
-        if preset_index == 1:
-            self.iterations = random.randint(3, 4)
-        elif preset_index == 3:
-            self.iterations = 5
-        elif preset_index == 4:
-            self.iterations = random.randint(3, 5)
-        elif preset_index == 5:
-            self.iterations = random.randint(3, 4)
-        elif preset_index == 6:
-            self.iterations = 3
-        elif preset_index == 7:
-            self.iterations = random.randint(4, 5)
-        elif preset_index == 8:
-            self.iterations = random.randint(4, 5)
-        elif preset_index == 9:
-            self.iterations = 3
-        else:
-            self.iterations = 4
-
+        self.iterations = 4
         self._sentence = []
+        self._angles = []
+        self._leaf_angles = []
 
     def _apply_rules_to_sentence(self, sentence):
         new_sentence = []
@@ -102,13 +83,12 @@ class Botanica:
             elif c == ']':
                 current_pos, angle = stack.pop()
 
-
         plant_width = max_x - min_x
         plant_height = max_y - min_y
 
         screen_width, screen_height = pygame.display.get_surface().get_size()
         
-         # Prilagodjavanje scale_factor u odnosu na širinu i visinu
+         # Prilagodjavanje scale_factor u odnosu na sirinu i visinu
         width_ratio = screen_width / plant_width if plant_width != 0 else float('inf')
         height_ratio = screen_height / plant_height if plant_height != 0 else float('inf')
         scale_factor = min(width_ratio, height_ratio) * 0.8
@@ -120,23 +100,39 @@ class Botanica:
         if plant_height * scale_factor > screen_height * 0.9:
             scale_factor = (screen_height * 0.9) / plant_height
 
-        # Prilagodjavanje horizontalnog i vertikalnog pomaka
-        horizontal_offset = 0
-        if plant_width * scale_factor > screen_width * 3 / 4 :
-            horizontal_offset = (screen_width - plant_width * scale_factor) / 2
+        return scale_factor
 
-        vertical_offset = 0
+    def _generate_plant(self):
+        self._angles = []
+        self._leaf_angles = []
+        self._leaf_size = []
+        self.leaf_shape = random.choice(leaf_shapes)
 
-        return scale_factor, np.array([horizontal_offset, vertical_offset])
-    
-    def _render_leaf(self, growth_factor, leaf_color, current_pos):
+        self.color = pygame.Color(random.choice(self.colors))
+        self.leaf_color = pygame.Color(random.choice(self.leaf_colors))
+        self.color_2 = pygame.Color(random.choice(self.colors))
+
+        for c in self._sentence:
+            if c == '+':
+                self._angles.append(random.uniform(18, 28))
+            elif c == '-':
+                self._angles.append(-random.uniform(18, 28))
+            elif c in 'G]':
+                self._leaf_angles.append(np.random.uniform(0, 360))
+                self._leaf_size.append(np.random.uniform(0.21, 0.27))
+        
+    def _render_leaf(self, leaf_color, current_pos, time, cnt):
         if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
-            leaf_scale_factor = random.uniform(0.21, 0.27)
+            leaf_scale_factor = self._leaf_size[cnt]
             leaf_width_factor = leaf_scale_factor * screen.get_width() / 100
             leaf_height_factor = leaf_scale_factor * screen.get_height() / 100
 
             # Nasumican ugao rotacije za list
-            rotation_angle = np.random.uniform(0, 360)
+            rotation_angle = self._leaf_angles[cnt]
+            sway_angle = 0.28 * np.sin(time * 0.04) 
+            rotation_angle += sway_angle
+            self._leaf_angles[cnt] = rotation_angle
+
             rotation_matrix = np.array([
                 [np.cos(np.radians(rotation_angle)), -np.sin(np.radians(rotation_angle))],
                 [np.sin(np.radians(rotation_angle)), np.cos(np.radians(rotation_angle))]
@@ -153,44 +149,40 @@ class Botanica:
             pygame.draw.polygon(screen, leaf_color, rotated_scaled_leaf_shape)
 
         
-    def _render(self, screen, scale_factor, offset):
+    def _render(self, screen, scale_factor, time):
         screen.fill(pygame.Color('#000000'))
-        
-        current_pos = np.array([screen.get_width() / 2, screen.get_height() - 50]) + offset
+        current_pos = np.array([screen.get_width() / 2, screen.get_height() - 50])
 
         angle = 90
-        stack = []
-
         growth_factor = 7  # Pocetna debljina grane
-        growth_factor_stack = []  # Stek za pamcenje prethodnih vrednosti growth_factor
 
-        color = pygame.Color(random.choice(self.colors))
-        leaf_color = pygame.Color(random.choice(self.leaf_colors))
-        color_2 = pygame.Color(random.choice(self.colors))
-        
+        stack = []
+        growth_factor_stack = []  # Stek za pamcenje prethodnih vrednosti growth_factor
+        angle_cnt = 0
+        leaf_cnt = 0
+
         for c in self._sentence:
             if c == 'F':
                 next_pos = current_pos + (np.array([np.cos(np.radians(angle)), -np.sin(np.radians(angle))]) * scale_factor)
-                pygame.draw.line(screen, color, current_pos.astype(int), next_pos.astype(int), int(growth_factor))
+                pygame.draw.line(screen, self.color, current_pos.astype(int), next_pos.astype(int), int(growth_factor))
                 current_pos = next_pos
             
             elif c == 'X':
                 next_pos = current_pos + (np.array([np.cos(np.radians(angle)), -np.sin(np.radians(angle))]) * scale_factor)
-                pygame.draw.line(screen, color, current_pos.astype(int), next_pos.astype(int), int(growth_factor))
+                pygame.draw.line(screen, self.color, current_pos.astype(int), next_pos.astype(int), int(growth_factor))
                 current_pos = next_pos
 
             elif c == 'G':
-                self._render_leaf(growth_factor, leaf_color, current_pos)
+                self._render_leaf(self.leaf_color, current_pos, time, leaf_cnt)
+                leaf_cnt += 1
 
             elif c == 'Z':
                 if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
-                    pygame.draw.circle(screen, (255, 0, 0), current_pos.astype(int), 4, 0)
+                    pygame.draw.circle(screen, (255, 0, 0), current_pos.astype(int), 8, 0)
 
-            elif c == '+':
-                angle += random.uniform(18, 28)
-
-            elif c == '-':
-                angle -= random.uniform(18, 28)
+            elif c in '+-':
+                angle += self._angles[angle_cnt]
+                angle_cnt += 1
 
             elif c == '[':
                 stack.append((current_pos.copy(), angle))
@@ -198,32 +190,36 @@ class Botanica:
                 growth_factor *= 0.85  # Smanji growth_factor za nove grane
 
             elif c == ']':
-                self._render_leaf(growth_factor, leaf_color, current_pos)
+                self._render_leaf(self.leaf_color, current_pos, time, leaf_cnt)
                 current_pos, angle = stack.pop()
                 growth_factor = growth_factor_stack.pop()  # Vrati growth_factor na prethodnu vrednost
+                leaf_cnt += 1
 
         pygame.display.flip()
 
 
 pygame.init()
-screen = pygame.display.set_mode((1000, 850)) 
+screen = pygame.display.set_mode((750, 600)) 
 pygame.display.set_caption('Botanica Algorithmica')
 
 app = Botanica()
 app._apply_rules()
-scale_factor, offset = app._calculate_scale_factor()
-app._render(screen, scale_factor, offset)
+scale_factor = app._calculate_scale_factor()
+#app._render(screen, scale_factor, offset, time)
+app._generate_plant()
 
 running = True
 need_redraw = True
+time = 0
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         
     if need_redraw:
-        app._render(screen, scale_factor, offset)
-        need_redraw = False
+        app._render(screen, scale_factor, time)
+        need_redraw = True
+    time += 1  # Ažuriranje vremena
 
     pygame.display.flip()
 
