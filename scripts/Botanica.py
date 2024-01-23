@@ -223,6 +223,9 @@ class Botanica:
         leaf_cnt = 0
         fruit_cnt = 0
 
+        flower_positions = []
+        flower_counter = []
+
         for c in self._sentence:
             if c == 'F':
                 next_pos = current_pos + (np.array([np.cos(np.radians(angle)), -np.sin(np.radians(angle))]) * scale_factor)
@@ -240,7 +243,9 @@ class Botanica:
 
             elif c == 'Z':
                 if(self.flower_or_fruit == 0):
-                    self._render_flower(current_pos, fruit_cnt)
+                    #self._render_flower(current_pos, fruit_cnt)
+                    flower_positions.append(current_pos)
+                    flower_counter.append(fruit_cnt)
                 else:
                     self._render_fruit(current_pos, fruit_cnt)
                 fruit_cnt += 1
@@ -259,6 +264,10 @@ class Botanica:
                 current_pos, angle = stack.pop()
                 growth_factor = growth_factor_stack.pop()  # Vrati growth_factor na prethodnu vrednost
                 leaf_cnt += 1
+        
+        for i, position in enumerate(flower_positions):
+            self._render_flower(position, flower_counter[i])
+
 
         pygame.display.flip()
 
