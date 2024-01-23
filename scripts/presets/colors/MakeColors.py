@@ -67,4 +67,21 @@ def filter_leaf_colors(color_list):
 
     return leaf_colors
 
+def filter_non_green_colors(color_list):
+    non_green = []
+
+    for color in color_list:
+        # Pretvaranje boje u HSV format
+        hsv_color = mcolors.rgb_to_hsv(mcolors.to_rgb(color))
+
+        # Suzenje opsega za nijansu (Hue) i dodavanje provera za zasicenost i vrednost
+        hue = hsv_color[0] * 360
+        saturation = hsv_color[1]
+        value = hsv_color[2]
+
+        if not(80 <= hue <= 140 and saturation > 0.2 and value > 0.2):
+            non_green.append(color)
+
+    return non_green
+
 # make_colors()
