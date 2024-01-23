@@ -160,11 +160,11 @@ class Botanica:
 
     def _render_flower(self, current_pos, cnt):
         if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
-            base_petal_radius = 10
+            base_petal_radius = 11
             base_center_radius = 8
             num_petals = 5
 
-            center_color = (255, 255, 0)
+            center_color = (246, 218, 31)
             
             flower_scale_factor = self._flower_size[cnt]
 
