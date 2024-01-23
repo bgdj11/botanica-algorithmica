@@ -3,11 +3,13 @@ sys.path.append('presets')
 
 import pygame
 import random
+import math
 import numpy as np
 import pandas as pd
 from Presets import _PRESETS
-from colors.MakeColors import filter_leaf_colors
+from colors.MakeColors import filter_leaf_colors, filter_non_green_colors
 from LeafPresets import *
+from FruitPresets import *
 
 def _roulette_selection(rules):
     rand = random.random()
@@ -26,15 +28,15 @@ class Botanica:
             preset_index = max(0, min(preset_index, len(_PRESETS) - 1))
 
         self.colors = pd.read_csv('presets\colors\colors_preset.csv')['Color'].tolist()
+        self.fruit_colors = pd.read_csv('presets\\colors\\fruit_colors_preset.csv')['Color'].tolist()
         self.leaf_colors = filter_leaf_colors(self.colors)
+        self.flower_colors = pd.read_csv('presets\\colors\\flower_colors_preset.csv')['Color'].tolist()
 
         self._axiom = _PRESETS[preset_index]['axiom']
         self._rules = _PRESETS[preset_index]['rules']
 
         self.iterations = 4
         self._sentence = []
-        self._angles = []
-        self._leaf_angles = []
 
     def _apply_rules_to_sentence(self, sentence):
         new_sentence = []
@@ -106,11 +108,19 @@ class Botanica:
         self._angles = []
         self._leaf_angles = []
         self._leaf_size = []
+        self._fruit_size = []
+        self._flower_size = []
+        self._fruit_angles = []
+
+        self.flower_or_fruit = random.randint(0,1)
+
         self.leaf_shape = random.choice(leaf_shapes)
+        self.fruit_shape = random.choice(fruit_shapes)
 
         self.color = pygame.Color(random.choice(self.colors))
         self.leaf_color = pygame.Color(random.choice(self.leaf_colors))
-        self.color_2 = pygame.Color(random.choice(self.colors))
+        self.fruit_color = pygame.Color(random.choice(self.fruit_colors))
+        self.petal_color = pygame.Color(random.choice(self.flower_colors))
 
         for c in self._sentence:
             if c == '+':
@@ -120,6 +130,57 @@ class Botanica:
             elif c in 'G]':
                 self._leaf_angles.append(np.random.uniform(0, 360))
                 self._leaf_size.append(np.random.uniform(0.21, 0.27))
+            elif c == 'Z':
+                self._fruit_size.append(np.random.uniform(0.21, 0.27))
+                self._flower_size.append(np.random.uniform(0.4, 0.6))
+                self._fruit_angles.append(np.random.uniform(0, 360))
+
+    def _render_fruit(self, current_pos, cnt):
+        if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
+            fruit_scale_factor = self._fruit_size[cnt]
+            fruit_width_factor = fruit_scale_factor * screen.get_width()/100
+            fruit_height_factor = fruit_scale_factor * screen.get_height()/100
+
+            rotation_angle = self._fruit_angles[cnt]
+
+            rotation_matrix = np.array([
+                [np.cos(np.radians(rotation_angle)), -np.sin(np.radians(rotation_angle))],
+                [np.sin(np.radians(rotation_angle)), np.cos(np.radians(rotation_angle))]
+            ])
+
+            # Rotiranje i skaliranje oblika lisca
+            rotated_scaled_fruit_shape = []
+            for x, y in self.fruit_shape:
+                rotated_point = np.dot(rotation_matrix, np.array([x, y]))
+                scaled_x = rotated_point[0] * fruit_width_factor + current_pos[0]
+                scaled_y = rotated_point[1] * fruit_height_factor + current_pos[1]
+                rotated_scaled_fruit_shape.append((scaled_x, scaled_y))
+
+            pygame.draw.polygon(screen, self.fruit_color, rotated_scaled_fruit_shape)
+
+    def _render_flower(self, current_pos, cnt):
+        if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
+            base_petal_radius = 10
+            base_center_radius = 8
+            num_petals = 5
+
+            center_color = (255, 255, 0)
+            
+            flower_scale_factor = self._flower_size[cnt]
+
+            petal_radius = base_petal_radius * flower_scale_factor
+            center_radius = base_center_radius * flower_scale_factor
+            
+            for i in range(num_petals):
+                angle = (360 / num_petals) * i
+                radian = np.radians(angle)
+                petal_x = current_pos[0] + np.cos(radian) * petal_radius
+                petal_y = current_pos[1] + np.sin(radian) * petal_radius
+                pygame.draw.circle(screen, self.petal_color, (int(petal_x), int(petal_y)), int(petal_radius))
+            
+            pygame.draw.circle(screen, center_color, current_pos.astype(int), int(center_radius))
+
+
         
     def _render_leaf(self, leaf_color, current_pos, time, cnt):
         if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
@@ -129,7 +190,7 @@ class Botanica:
 
             # Nasumican ugao rotacije za list
             rotation_angle = self._leaf_angles[cnt]
-            sway_angle = 0.28 * np.sin(time * 0.04) 
+            sway_angle = 0.25 * np.sin(time * 0.04) 
             rotation_angle += sway_angle
             self._leaf_angles[cnt] = rotation_angle
 
@@ -160,6 +221,7 @@ class Botanica:
         growth_factor_stack = []  # Stek za pamcenje prethodnih vrednosti growth_factor
         angle_cnt = 0
         leaf_cnt = 0
+        fruit_cnt = 0
 
         for c in self._sentence:
             if c == 'F':
@@ -177,8 +239,11 @@ class Botanica:
                 leaf_cnt += 1
 
             elif c == 'Z':
-                if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
-                    pygame.draw.circle(screen, (255, 0, 0), current_pos.astype(int), 8, 0)
+                if(self.flower_or_fruit == 0):
+                    self._render_flower(current_pos, fruit_cnt)
+                else:
+                    self._render_fruit(current_pos, fruit_cnt)
+                fruit_cnt += 1
 
             elif c in '+-':
                 angle += self._angles[angle_cnt]
