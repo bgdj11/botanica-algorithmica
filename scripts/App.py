@@ -1,4 +1,5 @@
 import pygame
+from PIL import Image
 
 pygame.init()
 screen = pygame.display.set_mode((1362, 750)) 
@@ -6,15 +7,30 @@ pygame.display.set_caption('Botanica Algorithmica')
 
 from Botanica import *
 
+def remove_black_background(surface, output_path):
+    # Pretvaranje pygame Surface objekta u PIL Image
+    image_string = pygame.image.tostring(surface, "RGBA")
+    img = Image.frombytes("RGBA", surface.get_size(), image_string)
+
+    datas = img.getdata()
+    new_data = []
+    for item in datas:
+        if item[0] == 0 and item[1] == 0 and item[2] == 0:
+            new_data.append((255, 255, 255, 0))  # Postavljanje crnih piksela (pozadine) na bezbojne
+        else:
+            new_data.append(item)
+
+    img.putdata(new_data)
+    img.save(output_path, "PNG")
+
 def save_plant_image():
-    
     timestamp = int(time.time())
-    image_name = f"../SavedPlants/screenshot_{timestamp}.png"
+    image_name_transparent = f"../SavedPlants/plant_{timestamp}.png"
 
     plant_screen = pygame.Surface((2 * SCREEN_WIDTH // 3, SCREEN_HEIGHT))
     plant_screen.blit(screen, (0, 0), (SCREEN_WIDTH // 3, 0, 2 * SCREEN_WIDTH // 3, SCREEN_HEIGHT))
-    
-    pygame.image.save(plant_screen, image_name)
+
+    remove_black_background(plant_screen, image_name_transparent)
 
 app = Botanica()
 scale_factor = app._generate_plant()
