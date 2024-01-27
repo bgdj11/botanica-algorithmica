@@ -148,7 +148,8 @@ class Botanica:
 
         return scale_factor
 
-    def get_varied_color(self, base_hex_color, variation_range=10):
+
+    def get_varied_color(self, base_hex_color, variation_range=12):
         base_color = pygame.Color(base_hex_color)
 
         r = max(0, min(255, base_color.r + random.randint(-variation_range, variation_range)))
@@ -156,6 +157,19 @@ class Botanica:
         b = max(0, min(255, base_color.b + random.randint(-variation_range, variation_range)))
 
         return pygame.Color(r, g, b)
+    
+    def _calculate_tree_segments(self, start_pos, end_pos, segments=2):
+        segment_list = []
+        last_pos = start_pos
+        for i in range(1, segments + 1):
+            t = i / segments
+            next_pos = [start_pos[0] + t * (end_pos[0] - start_pos[0]) + random.randint(-1, 1),
+                        start_pos[1] + t * (end_pos[1] - start_pos[1]) + random.randint(-1, 1)]
+            
+            segment_list.append((last_pos, next_pos))
+            last_pos = next_pos
+        return segment_list
+
 
     def _generate_plant(self):
 
@@ -174,6 +188,13 @@ class Botanica:
         self._flower_size = []
         self._fruit_angles = []
 
+        current_FX_segments = [] 
+
+        self._tree_segments = []
+        current_pos = np.array([2 * SCREEN_WIDTH / 3 + 25, PLANT_SCREEN_HEIGHT])
+        angle = 90 
+        stack = []
+
         self.flower_or_fruit = random.randint(0,1)
 
         self.leaf_shape = random.choice(leaf_shapes)
@@ -186,15 +207,29 @@ class Botanica:
 
         self.leaf_colors_variated = []
         self.stem_colors_variated = self._get_color_variations(self.color)
+        self.flower_colors_variated = []
+        self.fruit_colors_variated = []
 
         self._apply_rules()
 
+        self.scale_factor = self._calculate_scale_factor()
+
+        angle_cnt = 0
+
         for c in self._sentence:
             if c == '+':
-                self._angles.append(random.uniform(18, 28))
+                old_angle = angle
+                angle = random.uniform(18, 28)
+                self._angles.append(angle)
+                angle_cnt += 1
+                angle = angle + old_angle
             elif c == '-':
-                self._angles.append(-random.uniform(18, 28))
-            elif c in 'G]':
+                old_angle = angle
+                angle = -random.uniform(18, 28)
+                self._angles.append(angle)
+                angle_cnt += 1
+                angle = angle + old_angle
+            elif c == 'G':
                 self._leaf_angles.append(np.random.uniform(0, 360))
                 self._leaf_size.append(np.random.uniform(0.21, 0.27))
                 self.leaf_colors_variated.append(self.get_varied_color(self.leaf_color))
@@ -202,6 +237,21 @@ class Botanica:
                 self._fruit_size.append(np.random.uniform(0.21, 0.27))
                 self._flower_size.append(np.random.uniform(0.4, 0.6))
                 self._fruit_angles.append(np.random.uniform(0, 360))
+                self.flower_colors_variated.append(self.get_varied_color(self.petal_color))
+                self.fruit_colors_variated.append(self.get_varied_color(self.fruit_color))
+            elif c in "FX":
+                next_pos = current_pos + (np.array([np.cos(np.radians(angle)), -np.sin(np.radians(angle))]) * self.scale_factor)
+                current_FX_segments = self._calculate_tree_segments(current_pos, next_pos)
+                self._tree_segments.append(current_FX_segments)
+
+                current_pos = next_pos
+            elif c == "[":
+                stack.append((current_pos.copy(), angle))
+            elif c == "]":
+                self._leaf_angles.append(np.random.uniform(0, 360))
+                self._leaf_size.append(np.random.uniform(0.21, 0.27))
+                self.leaf_colors_variated.append(self.get_varied_color(self.leaf_color))
+                current_pos, angle = stack.pop()
 
         # Vracanje slajdera na pocetnu poziciju
         self.iterations_handle_rect.x = (
@@ -230,13 +280,31 @@ class Botanica:
         self._flower_size = []
         self._fruit_angles = []
         self.leaf_colors_variated = []
+        self.flower_colors_variated = []
+        self.fruit_colors_variated = []
+
+        current_FX_segments = [] 
+
+        self._tree_segments = []
+        current_pos = np.array([2 * SCREEN_WIDTH / 3 + 25, PLANT_SCREEN_HEIGHT])
+        angle = 90 
+        stack = []
+        angle_cnt = 0
 
         for c in self._sentence:
             if c == '+':
-                self._angles.append(random.uniform(18, 28))
+                old_angle = angle
+                angle = random.uniform(18, 28)
+                self._angles.append(angle)
+                angle_cnt += 1
+                angle = angle + old_angle
             elif c == '-':
-                self._angles.append(-random.uniform(18, 28))
-            elif c in 'G]':
+                old_angle = angle
+                angle = -random.uniform(18, 28)
+                self._angles.append(angle)
+                angle_cnt += 1
+                angle = angle + old_angle
+            elif c == 'G':
                 self._leaf_angles.append(np.random.uniform(0, 360))
                 self._leaf_size.append(np.random.uniform(0.21, 0.27))
                 self.leaf_colors_variated.append(self.get_varied_color(self.leaf_color))
@@ -244,6 +312,21 @@ class Botanica:
                 self._fruit_size.append(np.random.uniform(0.21, 0.27))
                 self._flower_size.append(np.random.uniform(0.4, 0.6))
                 self._fruit_angles.append(np.random.uniform(0, 360))
+                self.flower_colors_variated.append(self.get_varied_color(self.petal_color))
+                self.fruit_colors_variated.append(self.get_varied_color(self.fruit_color))
+            elif c in "FX":
+                next_pos = current_pos + (np.array([np.cos(np.radians(angle)), -np.sin(np.radians(angle))]) * self.scale_factor)
+                current_FX_segments = self._calculate_tree_segments(current_pos, next_pos)
+                self._tree_segments.append(current_FX_segments)
+
+                current_pos = next_pos
+            elif c == "[":
+                stack.append((current_pos.copy(), angle))
+            elif c == "]":
+                self._leaf_angles.append(np.random.uniform(0, 360))
+                self._leaf_size.append(np.random.uniform(0.21, 0.27))
+                self.leaf_colors_variated.append(self.get_varied_color(self.leaf_color))
+                current_pos, angle = stack.pop()
         
     def _render_fruit(self, screen, current_pos, cnt):
         if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
@@ -266,7 +349,7 @@ class Botanica:
                 scaled_y = rotated_point[1] * fruit_height_factor + current_pos[1]
                 rotated_scaled_fruit_shape.append((scaled_x, scaled_y))
 
-            pygame.draw.polygon(screen, self.fruit_color, rotated_scaled_fruit_shape)
+            pygame.draw.polygon(screen, self.fruit_colors_variated[cnt], rotated_scaled_fruit_shape)
 
     def _render_flower(self, screen, current_pos, cnt):
         if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
@@ -286,9 +369,10 @@ class Botanica:
                 radian = np.radians(angle)
                 petal_x = current_pos[0] + np.cos(radian) * petal_radius
                 petal_y = current_pos[1] + np.sin(radian) * petal_radius
-                pygame.draw.circle(screen, self.petal_color, (int(petal_x), int(petal_y)), int(petal_radius))
+                pygame.draw.circle(screen, self.flower_colors_variated[cnt], (int(petal_x), int(petal_y)), int(petal_radius))
             
-            pygame.draw.circle(screen, center_color, current_pos.astype(int), int(center_radius))
+            pygame.draw.circle(screen, center_color, [int(coord) for coord in current_pos], int(center_radius))
+
         
     def _render_leaf(self, screen, current_pos, time, cnt):
         if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
@@ -332,14 +416,12 @@ class Botanica:
 
         return variations
 
-    def _draw_tree(self, screen, start_pos, end_pos, base_width, hex_color):
+    def _render_tree(self, screen, start_pos, end_pos, base_width):
         current_width = base_width
+
         for color in self.stem_colors_variated:
-            offset_start = (start_pos[0] , start_pos[1])
-            offset_end = (end_pos[0], end_pos[1])
-            pygame.draw.line(screen, color, offset_start, offset_end, int(current_width))
-            current_width = max(1, current_width - 2)
-            
+            pygame.draw.line(screen, color, start_pos, end_pos, int(current_width))
+            current_width -= 2
         
     def _render(self, screen, scale_factor, time):
         current_pos = np.array([2 * SCREEN_WIDTH / 3 + 25, PLANT_SCREEN_HEIGHT])
@@ -350,20 +432,18 @@ class Botanica:
         angle_cnt = 0
         leaf_cnt = 0
         fruit_cnt = 0
+        FX_cnt = 0
 
         flower_positions = []
         flower_counter = []
 
         for c in self._sentence:
-            if c == 'F':
-                next_pos = current_pos + (np.array([np.cos(np.radians(angle)), -np.sin(np.radians(angle))]) * scale_factor)
-                self._draw_tree(screen, current_pos, next_pos, self.growth_factor, self.color)
-                current_pos = next_pos
-            
-            elif c == 'X':
-                next_pos = current_pos + (np.array([np.cos(np.radians(angle)), -np.sin(np.radians(angle))]) * scale_factor)
-                self._draw_tree(screen, current_pos, next_pos, self.growth_factor, self.color)
-                current_pos = next_pos
+            if c in 'FX':
+                for segment in self._tree_segments[FX_cnt]:
+                    start_pos, end_pos = segment
+                    self._render_tree(screen, start_pos, end_pos, self.growth_factor)
+                    current_pos = end_pos
+                FX_cnt += 1
 
             elif c == 'G':
                 self._render_leaf(screen, current_pos, time, leaf_cnt)
