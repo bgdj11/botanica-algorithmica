@@ -148,6 +148,15 @@ class Botanica:
 
         return scale_factor
 
+    def get_varied_color(self, base_hex_color, variation_range=10):
+        base_color = pygame.Color(base_hex_color)
+
+        r = max(0, min(255, base_color.r + random.randint(-variation_range, variation_range)))
+        g = max(0, min(255, base_color.g + random.randint(-variation_range, variation_range)))
+        b = max(0, min(255, base_color.b + random.randint(-variation_range, variation_range)))
+
+        return pygame.Color(r, g, b)
+
     def _generate_plant(self):
 
         self.preset_index = random.randint(0, len(_PRESETS) - 1)
@@ -175,6 +184,9 @@ class Botanica:
         self.fruit_color = pygame.Color(random.choice(self.fruit_colors))
         self.petal_color = pygame.Color(random.choice(self.flower_colors))
 
+        self.leaf_colors_variated = []
+        self.stem_colors_variated = self._get_color_variations(self.color)
+
         self._apply_rules()
 
         for c in self._sentence:
@@ -185,6 +197,7 @@ class Botanica:
             elif c in 'G]':
                 self._leaf_angles.append(np.random.uniform(0, 360))
                 self._leaf_size.append(np.random.uniform(0.21, 0.27))
+                self.leaf_colors_variated.append(self.get_varied_color(self.leaf_color))
             elif c == 'Z':
                 self._fruit_size.append(np.random.uniform(0.21, 0.27))
                 self._flower_size.append(np.random.uniform(0.4, 0.6))
@@ -216,6 +229,7 @@ class Botanica:
         self._fruit_size = []
         self._flower_size = []
         self._fruit_angles = []
+        self.leaf_colors_variated = []
 
         for c in self._sentence:
             if c == '+':
@@ -225,6 +239,7 @@ class Botanica:
             elif c in 'G]':
                 self._leaf_angles.append(np.random.uniform(0, 360))
                 self._leaf_size.append(np.random.uniform(0.21, 0.27))
+                self.leaf_colors_variated.append(self.get_varied_color(self.leaf_color))
             elif c == 'Z':
                 self._fruit_size.append(np.random.uniform(0.21, 0.27))
                 self._flower_size.append(np.random.uniform(0.4, 0.6))
@@ -275,7 +290,7 @@ class Botanica:
             
             pygame.draw.circle(screen, center_color, current_pos.astype(int), int(center_radius))
         
-    def _render_leaf(self, screen, leaf_color, current_pos, time, cnt):
+    def _render_leaf(self, screen, current_pos, time, cnt):
         if 0 <= current_pos[0] < screen.get_width() and 0 <= current_pos[1] < screen.get_height():
             leaf_scale_factor = self._leaf_size[cnt]
             leaf_width_factor = leaf_scale_factor * PLANT_SCREEN_WIDTH / 100
@@ -300,8 +315,31 @@ class Botanica:
                 scaled_y = rotated_point[1] * leaf_height_factor + current_pos[1]
                 rotated_scaled_leaf_shape.append((scaled_x, scaled_y))
 
-            pygame.draw.polygon(screen, leaf_color, rotated_scaled_leaf_shape)
+            pygame.draw.polygon(screen, self.leaf_colors_variated[cnt], rotated_scaled_leaf_shape)
 
+    def _get_color_variations(self, hex_color, variation_count=6, alpha=20):
+        base_color = pygame.Color(hex_color)
+        variations = []
+
+        for i in range(variation_count):
+            variation = pygame.Color(
+                max(0, min(255, base_color.r + random.randint(-15, 15))),
+                max(0, min(255, base_color.r + random.randint(-15, 15))),
+                max(0, min(255, base_color.r + random.randint(-15, 15))),
+                alpha  
+            )
+            variations.append(variation)
+
+        return variations
+
+    def _draw_tree(self, screen, start_pos, end_pos, base_width, hex_color):
+        current_width = base_width
+        for color in self.stem_colors_variated:
+            offset_start = (start_pos[0] , start_pos[1])
+            offset_end = (end_pos[0], end_pos[1])
+            pygame.draw.line(screen, color, offset_start, offset_end, int(current_width))
+            current_width = max(1, current_width - 2)
+            
         
     def _render(self, screen, scale_factor, time):
         current_pos = np.array([2 * SCREEN_WIDTH / 3 + 25, PLANT_SCREEN_HEIGHT])
@@ -319,16 +357,16 @@ class Botanica:
         for c in self._sentence:
             if c == 'F':
                 next_pos = current_pos + (np.array([np.cos(np.radians(angle)), -np.sin(np.radians(angle))]) * scale_factor)
-                pygame.draw.line(screen, self.color, current_pos.astype(int), next_pos.astype(int), int(self.growth_factor))
+                self._draw_tree(screen, current_pos, next_pos, self.growth_factor, self.color)
                 current_pos = next_pos
             
             elif c == 'X':
                 next_pos = current_pos + (np.array([np.cos(np.radians(angle)), -np.sin(np.radians(angle))]) * scale_factor)
-                pygame.draw.line(screen, self.color, current_pos.astype(int), next_pos.astype(int), int(self.growth_factor))
+                self._draw_tree(screen, current_pos, next_pos, self.growth_factor, self.color)
                 current_pos = next_pos
 
             elif c == 'G':
-                self._render_leaf(screen, self.leaf_color, current_pos, time, leaf_cnt)
+                self._render_leaf(screen, current_pos, time, leaf_cnt)
                 leaf_cnt += 1
 
             elif c == 'Z':
@@ -349,7 +387,7 @@ class Botanica:
                 self.growth_factor *= 0.85  # Smanji growth_factor za nove grane
 
             elif c == ']':
-                self._render_leaf(screen, self.leaf_color, current_pos, time, leaf_cnt)
+                self._render_leaf(screen, current_pos, time, leaf_cnt)
                 current_pos, angle = stack.pop()
                 self.growth_factor = growth_factor_stack.pop()  # Vrati growth_factor na prethodnu vrednost
                 leaf_cnt += 1
@@ -467,3 +505,9 @@ class Botanica:
                 )
                 return True
         return False
+
+    def _change_leaf_color(self):
+        self.leaf_color = pygame.Color(random.choice(self.leaf_colors))
+        for i in range(len(self.leaf_colors_variated)):
+            self.leaf_colors_variated[i] = self.get_varied_color(self.leaf_color)
+

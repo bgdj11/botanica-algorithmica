@@ -65,9 +65,9 @@ while running:
             elif app.random_leaf_button_rect.collidepoint(event.pos):
                 app.leaf_shape = app.leaf_shape = random.choice(leaf_shapes)
             elif app.change_stem_color_button_rect.collidepoint(event.pos):
-                app.color = pygame.Color(random.choice(app.colors))
+                app.stem_colors_variated = app._get_color_variations(pygame.Color(random.choice(app.colors)))
             elif app.change_leaf_color_button_rect.collidepoint(event.pos):
-                app.leaf_color = pygame.Color(random.choice(app.leaf_colors))
+                app._change_leaf_color()
             elif app.save_button_rect.collidepoint(event.pos):
                 save_plant_image()
 
