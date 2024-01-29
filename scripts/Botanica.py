@@ -75,6 +75,12 @@ class Botanica:
             handle_height
         )
 
+        self.random_leaf_button_pressed = False
+        self.generate_button_pressed = False
+        self.change_leaf_color_button_pressed = False
+        self.change_stem_color_button_pressed = False
+        self.save_button_pressed = False
+
         self.random_leaf_button_rect = pygame.Rect(100, 290 + text_offset + spacing, button_width, button_height)
 
         self.change_stem_color_button_rect = pygame.Rect(100, 380 + text_offset + 2 * spacing, button_width // 2 - 5, button_height)
@@ -482,7 +488,8 @@ class Botanica:
     def _render_ui(self, screen):
 
         button_color = (71, 58, 43)
-        text_color = (84, 117, 91)
+        pressed_button_color = (168, 135, 44)
+        text_color = (255, 255, 255)
         font = pygame.font.Font(None, 32)
 
         # Labele
@@ -493,13 +500,19 @@ class Botanica:
         screen.blit(growth_factor_label_text, (100, 260))
         
         # Dugme "Generate Again"
-        pygame.draw.rect(screen, button_color, self.generate_button_rect)
+        if self.generate_button_pressed:
+            pygame.draw.rect(screen, pressed_button_color, self.generate_button_rect)
+        else:
+            pygame.draw.rect(screen, button_color, self.generate_button_rect)
         generate_button_text = font.render('GENERATE NEW', True, text_color)
         generate_text_rect = generate_button_text.get_rect(center=self.generate_button_rect.center)
         screen.blit(generate_button_text, generate_text_rect)
 
         # Dugme "Save"
-        pygame.draw.rect(screen, button_color, self.save_button_rect)
+        if self.save_button_pressed:
+            pygame.draw.rect(screen, pressed_button_color, self.save_button_rect)
+        else:
+            pygame.draw.rect(screen, button_color, self.save_button_rect)
         save_button_text = font.render('SAVE', True, text_color)
         save_text_rect = save_button_text.get_rect(center=self.save_button_rect.center)
         screen.blit(save_button_text, save_text_rect)
@@ -513,7 +526,10 @@ class Botanica:
         pygame.draw.rect(screen, (100, 100, 100), self.growth_factor_handle_rect) 
 
         # Dugme "New leaves"
-        pygame.draw.rect(screen, button_color, self.random_leaf_button_rect)
+        if self.random_leaf_button_pressed:
+            pygame.draw.rect(screen, pressed_button_color, self.random_leaf_button_rect)
+        else:
+            pygame.draw.rect(screen, button_color, self.random_leaf_button_rect)
         random_leaf_button_text = font.render('CHANGE LEAVES', True, text_color)
         text_rect = random_leaf_button_text.get_rect(center=self.random_leaf_button_rect.center)
         screen.blit(random_leaf_button_text, text_rect)
@@ -521,7 +537,10 @@ class Botanica:
         small_font = pygame.font.Font(None, 24)
 
         # Dugme "Change stem color"
-        pygame.draw.rect(screen, button_color, self.change_stem_color_button_rect)
+        if self.change_stem_color_button_pressed:
+            pygame.draw.rect(screen, pressed_button_color, self.change_stem_color_button_rect)
+        else:
+            pygame.draw.rect(screen, button_color, self.change_stem_color_button_rect)
         change_stem_color_text_lines = ['CHANGE', 'STEM COLOR']
         stem_text_rect = self.change_stem_color_button_rect.copy()
         total_text_height = small_font.get_linesize() * len(change_stem_color_text_lines)
@@ -534,7 +553,10 @@ class Botanica:
             stem_text_rect.y += small_font.get_linesize()  
 
         # Dugme "Change leaf color"
-        pygame.draw.rect(screen, button_color, self.change_leaf_color_button_rect)
+        if self.change_leaf_color_button_pressed:
+            pygame.draw.rect(screen, pressed_button_color, self.change_leaf_color_button_rect)
+        else:
+            pygame.draw.rect(screen, button_color, self.change_leaf_color_button_rect)
         change_leaf_color_text_lines = ['CHANGE', 'LEAF COLOR']
         leaf_text_rect = self.change_leaf_color_button_rect.copy()
         total_text_height = small_font.get_linesize() * len(change_leaf_color_text_lines)

@@ -56,6 +56,7 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if app.generate_button_rect.collidepoint(event.pos):
                 scale_factor = app._generate_plant()
+                app.generate_button_pressed = True
                 need_ui_update = True
             elif app._handle_slider_events(event):  
                 app._modify_plant()
@@ -64,16 +65,29 @@ while running:
                 need_ui_update = True
             elif app.random_leaf_button_rect.collidepoint(event.pos):
                 app.leaf_shape = app.leaf_shape = random.choice(leaf_shapes)
+                app.random_leaf_button_pressed = True
+                need_ui_update = True
             elif app.change_stem_color_button_rect.collidepoint(event.pos):
                 app.stem_colors_variated = app._get_color_variations(pygame.Color(random.choice(app.colors)))
+                app.change_stem_color_button_pressed = True
+                need_ui_update = True
             elif app.change_leaf_color_button_rect.collidepoint(event.pos):
                 app._change_leaf_color()
+                app.change_leaf_color_button_pressed = True
+                need_ui_update = True
             elif app.save_button_rect.collidepoint(event.pos):
                 save_plant_image()
+                app.save_button_pressed = True
+                need_ui_update = True
 
         elif event.type == pygame.MOUSEBUTTONUP:
             app.dragging_slider = False
             app.dragging_growth_factor_slider = False
+            app.generate_button_pressed = False
+            app.random_leaf_button_pressed = False
+            app.change_stem_color_button_pressed = False
+            app.change_leaf_color_button_pressed = False
+            app.save_button_pressed = False
             need_ui_update = True
 
         elif event.type == pygame.MOUSEMOTION:
