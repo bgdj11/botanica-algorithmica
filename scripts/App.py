@@ -79,6 +79,10 @@ while running:
                 save_plant_image()
                 app.save_button_pressed = True
                 need_ui_update = True
+            elif app.change_fruit_flower_color_button_rect.collidepoint(event.pos):
+                app.change_fruit_flower_color()
+                app.change_fruit_flower_color_button_pressed = True
+                need_ui_update = True
 
         elif event.type == pygame.MOUSEBUTTONUP:
             app.dragging_slider = False
@@ -88,6 +92,7 @@ while running:
             app.change_stem_color_button_pressed = False
             app.change_leaf_color_button_pressed = False
             app.save_button_pressed = False
+            app.change_fruit_flower_color_button_pressed = False
             need_ui_update = True
 
         elif event.type == pygame.MOUSEMOTION:

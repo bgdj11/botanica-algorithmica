@@ -52,7 +52,7 @@ class Botanica:
         slider_height = 20
         handle_width = 15
         handle_height = 20
-        spacing = 30
+        spacing = 40
         text_offset = 20
         margin = 10
 
@@ -75,17 +75,19 @@ class Botanica:
             handle_height
         )
 
+        self.random_leaf_button_rect = pygame.Rect(100, 300 + spacing, button_width, button_height)
+
+        self.change_stem_color_button_rect = pygame.Rect(100, 420 + spacing, button_width // 2 - 5, button_height)
+        self.change_leaf_color_button_rect = pygame.Rect(100 + button_width // 2 + 5, 420 + spacing, button_width // 2 - 5, button_height)
+
+        self.change_fruit_flower_color_button_rect = pygame.Rect(100, 540 + spacing, button_width, button_height)
+
         self.random_leaf_button_pressed = False
         self.generate_button_pressed = False
         self.change_leaf_color_button_pressed = False
         self.change_stem_color_button_pressed = False
         self.save_button_pressed = False
-
-        self.random_leaf_button_rect = pygame.Rect(100, 290 + text_offset + spacing, button_width, button_height)
-
-        self.change_stem_color_button_rect = pygame.Rect(100, 380 + text_offset + 2 * spacing, button_width // 2 - 5, button_height)
-        self.change_leaf_color_button_rect = pygame.Rect(100 + button_width // 2 + 5, 380 + text_offset + 2 * spacing, button_width // 2 - 5, button_height)
-
+        self.change_fruit_flower_color_button_pressed = False
 
     def _apply_rules_to_sentence(self, sentence):
         new_sentence = []
@@ -568,6 +570,22 @@ class Botanica:
             screen.blit(rendered_text, text_rect)
             leaf_text_rect.y += small_font.get_linesize()  
 
+        # Dugme "Change fruit/flower color"
+        if self.change_fruit_flower_color_button_pressed:
+            pygame.draw.rect(screen, pressed_button_color, self.change_fruit_flower_color_button_rect)
+        else:
+            pygame.draw.rect(screen, button_color, self.change_fruit_flower_color_button_rect)
+        change_fruit_flower_color_text_lines = ['CHANGE', 'FRUIT / FLOWER COLOR']
+        fruit_flower_text_rect = self.change_fruit_flower_color_button_rect.copy()
+        total_text_height = small_font.get_linesize() * len(change_fruit_flower_color_text_lines)
+        fruit_flower_text_rect.y -= total_text_height // 4
+
+        for line in change_fruit_flower_color_text_lines:
+            rendered_text = small_font.render(line, True, text_color)
+            text_rect = rendered_text.get_rect(center=fruit_flower_text_rect.center)
+            screen.blit(rendered_text, text_rect)
+            fruit_flower_text_rect.y += small_font.get_linesize()  
+
 
     def _handle_slider_events(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -613,3 +631,13 @@ class Botanica:
         for i in range(len(self.leaf_colors_variated)):
             self.leaf_colors_variated[i] = self.get_varied_color(self.leaf_color)
 
+
+    def change_fruit_flower_color(self):
+        self.fruit_color = pygame.Color(random.choice(self.fruit_colors))
+        self.petal_color = pygame.Color(random.choice(self.flower_colors))
+
+        for i in range(len(self.flower_colors_variated)):
+            self.flower_colors_variated[i] = self.get_varied_color(self.petal_color)
+        
+        for i in range(len(self.fruit_colors_variated)):
+            self.fruit_colors_variated[i] = self.get_varied_color(self.fruit_color)
