@@ -52,6 +52,7 @@ Upon launching Botanica Algorithmica, you'll be presented with a user-friendly i
 - Click `SAVE` to store your plant in the `SavedPlants` folder.
 
 ![regenerate](https://github.com/bgdj11/botanica-algorithmica/assets/149267502/35ad5d9a-2485-4147-92e4-52105f027a4f)
+![development](https://github.com/bgdj11/botanica-algorithmica/assets/149267502/67be2eb2-0203-44e1-97db-d5682e37607a)
 ![change_leaves](https://github.com/bgdj11/botanica-algorithmica/assets/149267502/e15c43fa-d630-47ad-8f59-8a0a2b0ccd5d)
 
 ## Contributing
